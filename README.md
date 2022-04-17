@@ -32,3 +32,6 @@ setコマンド実行時に引数としてより細かな情報を与える事�
 
 masterブランチをもとに、各機能追加中の各ブランチがあり、開発とテストが終わったらmasterブランチにmargeしていく使い方をする。  
 masterブランチに書きかけコードが存在しないようにし、行き詰ったときにmasterブランチでスタート地点に戻れるようにする。  
+
+py-cordは2.0.0b7を使用(requirements.txt)
+bot追加用リンクにapplications.commandsスコープを追加しないとslash_commandが使えない。
