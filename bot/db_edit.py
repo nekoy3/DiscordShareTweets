@@ -4,12 +4,17 @@ db_name = ''
 def check_db(c):
     global db_name
     #テーブルの存在を確認
-    c.execute(f"SELECT * FROM {db_name} WHERE type='table' AND name='{db_name}'")
-    if c.fetchone() is None:
-        print("error: can't access database file.")
-        exit()
+    c.execute("select name from sqlite_master where type='table'")
+    for i in c.fetchall():
+        table_name = i[0]
+        break
+
+    if table_name == 'tweet_share':
+        print(f"{db_name} is already exist.")
+        return
     else:
-        print("database file is ready. " + str(c.fetchone()))
+        print("error: can't access database table.")
+        exit()
 
 def create_db(DB_NAME):
     global db_name
@@ -18,8 +23,8 @@ def create_db(DB_NAME):
     try:
         conn = sqlite3.connect(f'{DB_NAME}.db')
         c = conn.cursor()
-        #テーブルはDBファイル名と同じ名前、レコードは識別ID、discordユーザー名、チャンネルID、ツイートID、media(boolean)、条件ワードを格納する
-        c.execute(f"CREATE TABLE IF NOT EXISTS {DB_NAME}(id INTEGER PRIMARY KEY, user_name TEXT, channel_id TEXT, tweet_id TEXT, media BOOLEAN, condition_word TEXT)")
+        #テーブルはtweet_share、レコードは識別ID、discordユーザー名、チャンネルID、Twitter共有ユーザーID、media(boolean)、条件ワード、最後に取得したツイートidを格納する
+        c.execute(f"CREATE TABLE IF NOT EXISTS tweet_share(id INTEGER PRIMARY KEY, discord_user_id TEXT, channel_id TEXT, twitter_user_id TEXT, media BOOLEAN, condition_word TEXT, latest_tweet_id TEXT)")
         conn.commit()
         check_db(c)
         conn.close()
@@ -28,4 +33,11 @@ def create_db(DB_NAME):
         print("please edit config.ini. " + str(e))
         exit()
 
-
+def run_sql(sql_text):
+    conn = sqlite3.connect(f'{db_name}.db')
+    c = conn.cursor()
+    check_db(c)
+    c.execute(sql_text)
+    conn.commit()
+    conn.close()
+    return c.fetchall()
