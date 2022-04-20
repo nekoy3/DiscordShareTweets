@@ -1,28 +1,19 @@
-from db_edit import run_sql
+import global_value as g
 
 import twint
 import csv
+import os
 
-SET_MAX_CHANNEL_COUNT_GLOBAL = 0
-
-def set_db_fields(twitter_username, serch_word, media_bool, discord_user_id):
-    global SET_MAX_CHANNEL_COUNT_GLOBAL
-    #insertする前に、SET_MAX_CHANNEL_COUNTとfieldの数を比較する
-    sql_text = f"SELECT * FROM tweet_share WHERE discord_user_id = '{discord_user_id}'"
-    result = run_sql(sql_text)
-
-    sql_text = f"INSERT INTO tweet_share(user_name, channel_id, twitter_user_id, media, condition_word, latest_tweet_id) VALUES('{twitter_username}', '{discord_user_id}', '{twitter_username}', {media_bool}, '{serch_word}', '{csv_list[0][0]}')"
-    run_sql(sql_text)
-
-def get_tweet_csv(twitter_username, serch_word):
+async def get_tweet_csv(twitter_username, search_word):
     c = twint.Config()
-    c.Username = twitter_username
-    c.Search = serch_word
-    c.Limit = 1
+    if twitter_username != '':
+        c.Username = twitter_username
+    c.Search = search_word
+    c.Limit = g.LIMIT_SCRAPING_DAY_COUNT
     c.Output = "get.csv"
     c.Lang = "jp"
 
-    twint.run.Search(c)
+    await twint.run.Search(c)
 
 def read_csv():
     csv_list = []
@@ -32,13 +23,26 @@ def read_csv():
             csv_list.append(row.split(' '))
     return csv_list
 
-def main(twitter_username, serch_word, media_bool, discord_user_id, SET_MAX_CHANNEL_COUNT):
-    global SET_MAX_CHANNEL_COUNT_GLOBAL
-    SET_MAX_CHANNEL_COUNT_GLOBAL = SET_MAX_CHANNEL_COUNT
-    set_db_fields(twitter_username, serch_word, media_bool, discord_user_id)
-    get_tweet_csv(twitter_username, serch_word)
+def get_media_tweet(media_type, csv_list):
+    fixed_csv_list = []
+    #media_type = が1なら画像などリンク付きツイートのみ、0ならリンクなしのツイートのみ、それ以外なら全て
+    if media_type == 2:
+        fixed_csv_list = csv_list
+    elif media_type == 1:
+        for i in csv_list:
+            #httpを含むものはリンク付きツイート
+            if i[5].find('http') != -1:
+                fixed_csv_list.append(i)
+    elif media_type == 0:
+        for i in csv_list:
+            #httpを含まないものはリンクなしツイート
+            if i[5].find('http') == -1:
+                fixed_csv_list.append(i)
+    return fixed_csv_list
+
+async def get_tweet_main(twitter_username, search_word, media_type):
+    await get_tweet_csv(twitter_username, search_word)
     csv_list = read_csv()
-
-
-if __name__ == "__main__":
-    main()
+    os.remove('get.csv')
+    csv_list = get_media_tweet(media_type, csv_list)
+    return csv_list[0:9]

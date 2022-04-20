@@ -9,7 +9,8 @@ def create_config():
         'checking_tweet_delay_seconds': 300,
         'bot_request_delay_seconds': 5,
         'bot_token': '',
-        'db_name': 'tweet_share_db'
+        'db_name': 'tweet_share_db',
+        'limit_scraping_day_count': 5
     }
 
     with open('./config.ini', 'w') as file:

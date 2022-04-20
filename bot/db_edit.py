@@ -1,3 +1,6 @@
+from get_tweet import get_tweet_main
+import global_value as g
+
 import sqlite3
 
 db_name = ''
@@ -41,3 +44,10 @@ def run_sql(sql_text):
     conn.commit()
     conn.close()
     return c.fetchall()
+
+def first_set_db_run(user_id, channel_id, twitter_user_id, media, condition_word, latest_tweet_id):
+    sql_text = f"INSERT INTO tweet_share(discord_user_id, channel_id, twitter_user_id, media, condition_word, latest_tweet_id) VALUES('{user_id}', '{channel_id}', '{twitter_user_id}', {media}, '{condition_word}', '{latest_tweet_id}')"
+    run_sql(sql_text)
+
+    #ツイートを最新の一つのみ取得する(get_tweet.py)
+    tweet_csv = get_tweet_main(twitter_user_id, condition_word, latest_tweet_id, g.LIMIT_SCRAPING_DAY_COUNT)
